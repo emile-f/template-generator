@@ -1,10 +1,12 @@
-import { FormEvent, useMemo, useState } from 'react'
+import { FormEvent, useState } from 'react'
 import FormField from './components/FormField'
 import ResponsePanel from './components/ResponsePanel'
 import { generateTemplate, ApiError } from './lib/api'
 import { apiBaseUrl, defaultIds } from './lib/config'
 import { sampleData } from './lib/sampleData'
-import type { GenerateTemplatePayload } from './lib/types'
+import type { GenerateTemplatePayload, TemplateResponse } from './lib/types'
+
+const apiHost = new URL(apiBaseUrl, 'http://localhost').host
 
 const initialFormState = {
   projectId: '',
@@ -20,7 +22,7 @@ type FormErrors = Partial<Record<keyof FormState, string>>
 const App = () => {
   const [formState, setFormState] = useState<FormState>(initialFormState)
   const [errors, setErrors] = useState<FormErrors>({})
-  const [response, setResponse] = useState<unknown>(null)
+  const [response, setResponse] = useState<TemplateResponse>(null)
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [statusText, setStatusText] = useState('Ready to generate a new template.')
@@ -40,8 +42,7 @@ const App = () => {
     template: state.template.trim()
   })
 
-  const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
-    event?.preventDefault()
+  const sendRequest = async () => {
     setCopiedState(null)
 
     const validationErrors = validate(formState)
@@ -71,15 +72,10 @@ const App = () => {
     }
   }
 
-  const apiHost = useMemo(() => {
-    try {
-      return new URL(apiBaseUrl).host
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : 'Unknown error'
-      console.warn('Unable to parse API URL', reason)
-      return apiBaseUrl
-    }
-  }, [])
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    void sendRequest()
+  }
 
   const handleReset = () => {
     setFormState(initialFormState)
@@ -117,7 +113,7 @@ const App = () => {
   }
 
   const retryRequest = () => {
-    void handleSubmit()
+    void sendRequest()
   }
 
   return (
@@ -151,9 +147,7 @@ const App = () => {
             </div>
 
             <form
-              onSubmit={(event) => {
-                void handleSubmit(event)
-              }}
+              onSubmit={handleSubmit}
               className="form"
               aria-label="Template request form"
             >

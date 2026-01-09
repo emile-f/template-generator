@@ -24,17 +24,18 @@ export async function generateTemplate(
   options: GenerateTemplateOptions = {}
 ): Promise<TemplateResponse> {
   const controller = new AbortController()
+  let timedOut = false
   const timeoutMs = options.timeoutMs ?? requestTimeoutMs
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  const timeoutId = setTimeout(() => {
+    timedOut = true
+    controller.abort()
+  }, timeoutMs)
 
-  if (options.signal) {
-    const externalSignal = options.signal
-    if (externalSignal.aborted) {
-      controller.abort(externalSignal.reason as DOMException)
-    } else {
-      const abortHandler = () => controller.abort(externalSignal.reason as DOMException)
-      externalSignal.addEventListener('abort', abortHandler, { once: true })
-    }
+  if (options.signal?.aborted) {
+    controller.abort()
+  } else if (options.signal) {
+    const abortHandler = () => controller.abort()
+    options.signal.addEventListener('abort', abortHandler, { once: true })
   }
 
   try {
@@ -42,9 +43,6 @@ export async function generateTemplate(
 
     const response = await fetch(apiBaseUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify(payload),
       signal: controller.signal
     })
@@ -60,9 +58,13 @@ export async function generateTemplate(
     return data
   } catch (error: unknown) {
     if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new ApiError(`Request timed out after ${timeoutMs}ms`, undefined, {
-        code: 'timeout'
-      })
+      if (timedOut) {
+        throw new ApiError(`Request timed out after ${timeoutMs}ms`, undefined, {
+          code: 'timeout'
+        })
+      }
+
+      throw new ApiError('Request was cancelled', undefined, { code: 'aborted' })
     }
 
     if (error instanceof ApiError) {
@@ -76,10 +78,10 @@ export async function generateTemplate(
   }
 }
 
-const parseMaybeJson = (raw: string): unknown => {
+const parseMaybeJson = (raw: string): TemplateResponse => {
   if (!raw) return null
   try {
-    return JSON.parse(raw)
+    return JSON.parse(raw) as TemplateResponse
   } catch (error) {
     logDev('Response is not JSON, returning raw text', error)
     return raw
@@ -88,9 +90,13 @@ const parseMaybeJson = (raw: string): unknown => {
 
 const buildErrorMessage = (status: number, data: unknown): string => {
   if (typeof data === 'string') return `${status}: ${data}`
-  if (data && typeof data === 'object') {
-    const message = (data as Record<string, unknown>).message
-    if (typeof message === 'string') return `${status}: ${message}`
-  }
+  if (isErrorPayload(data) && typeof data.message === 'string') return `${status}: ${data.message}`
   return `Request failed with status ${status}`
 }
+
+type ErrorPayload = {
+  message?: unknown
+}
+
+const isErrorPayload = (value: unknown): value is ErrorPayload =>
+  Boolean(value && typeof value === 'object')

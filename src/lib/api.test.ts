@@ -28,9 +28,7 @@ describe('generateTemplate', () => {
     const result = await generateTemplate(basePayload, { timeoutMs: 200 })
 
     expect(result).toEqual(mockResponse)
-    const expectedHeaders: unknown = expect.objectContaining({
-      'Content-Type': 'application/json'
-    })
+    const expectedHeaders = expect.objectContaining({ 'Content-Type': 'application/json' })
     expect(fetchMock).toHaveBeenCalledWith(
       FALLBACK_API_URL,
       expect.objectContaining({
@@ -58,7 +56,7 @@ describe('generateTemplate', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockImplementation((_url, options: RequestInit = {}) => {
-        const signal = options.signal as AbortSignal | undefined
+        const { signal } = options
         return new Promise((_resolve, reject) => {
           signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')))
         })

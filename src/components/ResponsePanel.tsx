@@ -1,5 +1,4 @@
-import { useMemo } from 'react'
-import type { TemplateResponse } from '../lib/types'
+import type { TemplateData, TemplateImage, TemplateResponse } from '../lib/types'
 
 type ResponsePanelProps = {
   response: TemplateResponse
@@ -18,21 +17,12 @@ const ResponsePanel = ({
   onCopy,
   onRetry
 }: ResponsePanelProps) => {
-  const formattedJson = useMemo(() => {
-    if (!response) return ''
-    try {
-      return JSON.stringify(response, null, 2)
-    } catch (serializationError) {
-      console.warn('Unable to stringify response', serializationError)
-      return String(response)
-    }
-  }, [response])
+  const formattedJson = response ? JSON.stringify(response, null, 2) : ''
+  const previewText = extractPreviewText(response)
+  const imageUrls = extractImageUrls(response)
+  const templateContent = extractTemplateContent(response)
 
-  const previewText = useMemo(() => extractPreviewText(response), [response])
-  const imageUrls = useMemo(() => extractImageUrls(response), [response])
-  const templateContent = useMemo(() => extractTemplateContent(response), [response])
-
-  const hasResponse = Boolean(response)
+  const hasResponse = response !== null
 
   return (
     <div className="glass-card response-card" aria-live="polite">
@@ -141,41 +131,52 @@ const ResponsePanel = ({
 const extractPreviewText = (data: TemplateResponse): string | null => {
   if (!data) return null
   if (typeof data === 'string') return data
-  if (typeof data === 'object') {
-    const record = data as Record<string, unknown>
-    const keys = ['content', 'template', 'text', 'result', 'message', 'body']
-    for (const key of keys) {
-      const value = record[key]
-      if (typeof value === 'string') return value
-    }
 
-    const choices = record.choices
-    if (Array.isArray(choices) && choices.length > 0) {
-      const firstChoice = choices[0] as Record<string, unknown>
-      const nestedMessage = (firstChoice.message as Record<string, unknown>)?.content
-      if (typeof nestedMessage === 'string') return nestedMessage
-    }
+  if (!isTemplateRecord(data)) return null
+
+  const candidates = [
+    data.content,
+    data.template,
+    data.text,
+    data.result,
+    data.message,
+    data.body
+  ]
+
+  for (const value of candidates) {
+    if (typeof value === 'string') return value
   }
+
+  const [firstChoice] = data.choices ?? []
+  const nestedMessage = firstChoice?.message?.content
+  if (typeof nestedMessage === 'string') return nestedMessage
 
   return null
 }
 
 const extractImageUrls = (data: TemplateResponse): string[] => {
-  if (!data || typeof data !== 'object') return []
-  const record = data as Record<string, unknown>
+  if (!isTemplateRecord(data)) return []
+
   const urls = new Set<string>()
+  const collectImage = (item: TemplateImage) => {
+    if (typeof item === 'string') {
+      if (isImageUrl(item)) urls.add(item)
+      return
+    }
 
-  const candidates = [record.images, record.urls, record.data].filter(Array.isArray) as unknown[][]
+    if (isTemplateImageObject(item) && typeof item.url === 'string' && isImageUrl(item.url)) {
+      urls.add(item.url)
+    }
+  }
 
-  candidates.forEach((collection) => {
-    collection.forEach((item) => {
-      if (typeof item === 'string' && isImageUrl(item)) urls.add(item)
-      if (item && typeof item === 'object') {
-        const url = (item as Record<string, unknown>).url
-        if (typeof url === 'string' && isImageUrl(url)) urls.add(url)
-      }
-    })
+  data.images?.forEach(collectImage)
+  data.urls?.forEach((url) => {
+    if (isImageUrl(url)) urls.add(url)
   })
+
+  if (Array.isArray(data.data)) {
+    data.data.forEach(collectImage)
+  }
 
   return Array.from(urls)
 }
@@ -184,18 +185,20 @@ const isImageUrl = (value: string) =>
   /^https?:\/\//.test(value) && /(png|jpe?g|gif|webp|svg)(\?|$)/i.test(value)
 
 const extractTemplateContent = (data: TemplateResponse): string | null => {
-  if (!data || typeof data !== 'object') return null
-  const record = data as Record<string, unknown>
+  if (!isTemplateRecord(data)) return null
+  if (typeof data.template === 'string') return data.template
 
-  if (typeof record.template === 'string') return record.template
-
-  const nestedData = record.data
-  if (nestedData && typeof nestedData === 'object') {
-    const template = (nestedData as Record<string, unknown>).template
-    if (typeof template === 'string') return template
+  if (isTemplateRecord(data.data) && typeof data.data.template === 'string') {
+    return data.data.template
   }
 
   return null
 }
+
+const isTemplateRecord = (value: TemplateResponse): value is TemplateData =>
+  Boolean(value && typeof value === 'object' && !Array.isArray(value))
+
+const isTemplateImageObject = (value: TemplateImage): value is { url?: string } =>
+  Boolean(value && typeof value === 'object')
 
 export default ResponsePanel
