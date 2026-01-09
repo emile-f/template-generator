@@ -41,6 +41,7 @@ export async function generateTemplate(
   try {
     logDev('Request payload', payload)
 
+    // DO NOT ADD JSON HEADERS HERE - LET THE SERVER HANDLE IT
     const response = await fetch(apiBaseUrl, {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -52,6 +53,10 @@ export async function generateTemplate(
 
     if (!response.ok) {
       throw new ApiError(buildErrorMessage(response.status, data), response.status, data)
+    }
+
+    if (!isTemplateResponse(data)) {
+      throw new ApiError('Unexpected response shape', response.status, data)
     }
 
     logDev('API response', data)
@@ -78,10 +83,10 @@ export async function generateTemplate(
   }
 }
 
-const parseMaybeJson = (raw: string): TemplateResponse => {
+const parseMaybeJson = (raw: string): unknown => {
   if (!raw) return null
   try {
-    return JSON.parse(raw) as TemplateResponse
+    return JSON.parse(raw)
   } catch (error) {
     logDev('Response is not JSON, returning raw text', error)
     return raw
@@ -100,3 +105,14 @@ type ErrorPayload = {
 
 const isErrorPayload = (value: unknown): value is ErrorPayload =>
   Boolean(value && typeof value === 'object')
+
+const isTemplateData = (value: unknown): value is TemplateResponse['data'] =>
+  Boolean(value && typeof value === 'object' && typeof (value as { template?: unknown }).template === 'string')
+
+const isTemplateResponse = (value: unknown): value is TemplateResponse =>
+  Boolean(
+    value &&
+    typeof value === 'object' &&
+    typeof (value as { message?: unknown }).message === 'string' &&
+    isTemplateData((value as { data?: unknown }).data)
+  )

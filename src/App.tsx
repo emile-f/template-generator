@@ -22,7 +22,7 @@ type FormErrors = Partial<Record<keyof FormState, string>>
 const App = () => {
   const [formState, setFormState] = useState<FormState>(initialFormState)
   const [errors, setErrors] = useState<FormErrors>({})
-  const [response, setResponse] = useState<TemplateResponse>(null)
+  const [response, setResponse] = useState<TemplateResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [statusText, setStatusText] = useState('Ready to generate a new template.')

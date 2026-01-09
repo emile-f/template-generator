@@ -16,7 +16,7 @@ afterEach(() => {
 
 describe('generateTemplate', () => {
   it('posts payload and returns parsed JSON when successful', async () => {
-    const mockResponse = { result: 'ok', content: 'Hello' }
+    const mockResponse = { message: 'Request success', data: { template: 'Hello' } }
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -28,15 +28,13 @@ describe('generateTemplate', () => {
     const result = await generateTemplate(basePayload, { timeoutMs: 200 })
 
     expect(result).toEqual(mockResponse)
-    const expectedHeaders = expect.objectContaining({ 'Content-Type': 'application/json' })
-    expect(fetchMock).toHaveBeenCalledWith(
-      FALLBACK_API_URL,
-      expect.objectContaining({
-        method: 'POST',
-        headers: expectedHeaders,
-        body: JSON.stringify(basePayload)
-      })
-    )
+    const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe(FALLBACK_API_URL)
+    expect(options).toMatchObject({
+      method: 'POST',
+      body: JSON.stringify(basePayload)
+    })
+    expect(options?.headers).toEqual({ 'Content-Type': 'application/json' })
   })
 
   it('throws ApiError when the server responds with an error', async () => {

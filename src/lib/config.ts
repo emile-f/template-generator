@@ -7,9 +7,10 @@ export const defaultIds = {
 }
 
 export const requestTimeoutMs = 60000
-const envUrl = (import.meta.env.VITE_API_URL ?? '').trim()
+const envUrl =
+  typeof import.meta.env?.VITE_API_URL === 'string' ? import.meta.env.VITE_API_URL.trim() : ''
 export const apiBaseUrl: string = envUrl || FALLBACK_API_URL
-export const isDev = import.meta.env.DEV
+export const isDev = typeof import.meta.env?.DEV === 'boolean' ? import.meta.env.DEV : false
 
 export const logDev = (...messages: unknown[]) => {
   if (isDev) {
