@@ -28,11 +28,14 @@ describe('generateTemplate', () => {
     const result = await generateTemplate(basePayload, { timeoutMs: 200 })
 
     expect(result).toEqual(mockResponse)
+    const expectedHeaders: unknown = expect.objectContaining({
+      'Content-Type': 'application/json'
+    })
     expect(fetchMock).toHaveBeenCalledWith(
       FALLBACK_API_URL,
       expect.objectContaining({
         method: 'POST',
-        headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+        headers: expectedHeaders,
         body: JSON.stringify(basePayload)
       })
     )

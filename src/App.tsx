@@ -75,7 +75,8 @@ const App = () => {
     try {
       return new URL(apiBaseUrl).host
     } catch (error) {
-      console.warn('Unable to parse API URL', error)
+      const reason = error instanceof Error ? error.message : 'Unknown error'
+      console.warn('Unable to parse API URL', reason)
       return apiBaseUrl
     }
   }, [])
@@ -115,7 +116,9 @@ const App = () => {
     setErrors((prev) => ({ ...prev, [field]: undefined }))
   }
 
-  const retryRequest = () => handleSubmit()
+  const retryRequest = () => {
+    void handleSubmit()
+  }
 
   return (
     <div className="app-shell">
@@ -147,7 +150,13 @@ const App = () => {
               <span className="pill pill-ghost">POST {apiHost}</span>
             </div>
 
-            <form onSubmit={handleSubmit} className="form" aria-label="Template request form">
+            <form
+              onSubmit={(event) => {
+                void handleSubmit(event)
+              }}
+              className="form"
+              aria-label="Template request form"
+            >
               <div className="field-grid">
                 <FormField
                   id="project_id"
@@ -172,35 +181,35 @@ const App = () => {
               <FormField
                 id="prompt"
                 label="Prompt"
-              value={formState.prompt}
-              onChange={(value) => updateField('prompt', value)}
-              placeholder="Tell the AI what to generate, tone, and constraints."
-              helpText="Required. Describe the output style, tone, and any brand constraints."
-              required
-              type="textarea"
-              rows={3}
-              autoGrow
-              maxHeight={300}
-              disabled={loading}
-              error={errors.prompt}
-            />
+                value={formState.prompt}
+                onChange={(value) => updateField('prompt', value)}
+                placeholder="Tell the AI what to generate, tone, and constraints."
+                helpText="Required. Describe the output style, tone, and any brand constraints."
+                required
+                type="textarea"
+                rows={3}
+                autoGrow
+                maxHeight={300}
+                disabled={loading}
+                error={errors.prompt}
+              />
 
-            <FormField
-              id="template"
+              <FormField
+                id="template"
                 label="Template"
                 value={formState.template}
                 onChange={(value) => updateField('template', value)}
                 placeholder="Use {{placeholders}} to map your variables."
-              helpText="Required"
-              required
-              type="textarea"
-              rows={8}
-              autoGrow
-              maxHeight={420}
-              monospace
-              disabled={loading}
-              error={errors.template}
-            />
+                helpText="Required. Include placeholders like {{user_name}} or {{cta_link}} that the backend will fill."
+                required
+                type="textarea"
+                rows={8}
+                autoGrow
+                maxHeight={420}
+                monospace
+                disabled={loading}
+                error={errors.template}
+              />
 
               <div className="control-row">
                 <button className="btn primary" type="submit" disabled={loading}>

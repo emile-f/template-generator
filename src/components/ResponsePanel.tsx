@@ -7,7 +7,7 @@ type ResponsePanelProps = {
   error: string | null
   status: string
   onCopy: (content: string, label: 'json' | 'text') => Promise<void> | void
-  onRetry: () => Promise<void> | void
+  onRetry: () => void
 }
 
 const ResponsePanel = ({ response, loading, error, status, onCopy, onRetry }: ResponsePanelProps) => {
@@ -56,7 +56,13 @@ const ResponsePanel = ({ response, loading, error, status, onCopy, onRetry }: Re
         <div className="preview-block">
           <div className="block-header">
             <h3>Preview</h3>
-            <button className="btn ghost" onClick={() => onCopy(previewText, 'text')} disabled={loading}>
+            <button
+              className="btn ghost"
+              onClick={() => {
+                void onCopy(previewText, 'text')
+              }}
+              disabled={loading}
+            >
               Copy text
             </button>
           </div>
@@ -84,7 +90,11 @@ const ResponsePanel = ({ response, loading, error, status, onCopy, onRetry }: Re
           <h3>Raw JSON</h3>
           <button
             className="btn ghost"
-            onClick={() => formattedJson && onCopy(formattedJson, 'json')}
+            onClick={() => {
+              if (formattedJson) {
+                void onCopy(formattedJson, 'json')
+              }
+            }}
             disabled={!formattedJson || loading}
           >
             Copy JSON
@@ -99,13 +109,15 @@ const ResponsePanel = ({ response, loading, error, status, onCopy, onRetry }: Re
         <div className="preview-block">
           <div className="block-header">
             <h3>Template Output</h3>
-            <button
-              className="btn ghost"
-              onClick={() => onCopy(templateContent, 'text')}
-              disabled={loading}
-            >
-              Copy template
-            </button>
+          <button
+            className="btn ghost"
+            onClick={() => {
+              void onCopy(templateContent, 'text')
+            }}
+            disabled={loading}
+          >
+            Copy template
+          </button>
           </div>
           <pre className="code-block code-block-scroll">{templateContent}</pre>
         </div>
