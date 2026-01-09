@@ -23,8 +23,14 @@
 
 body {
   margin: 0;
-  font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
-  background: radial-gradient(circle at 20% 20%, rgba(93, 213, 255, 0.08), transparent 25%),
+  font-family:
+    'Space Grotesk',
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(93, 213, 255, 0.08), transparent 25%),
     radial-gradient(circle at 80% 0%, rgba(244, 114, 182, 0.08), transparent 20%),
     linear-gradient(135deg, var(--bg), var(--bg-2));
   background-size: 140% 140%;
@@ -44,7 +50,13 @@ body {
   content: '';
   position: fixed;
   inset: -30%;
-  background: conic-gradient(from 120deg, rgba(93, 213, 255, 0.18), rgba(244, 114, 182, 0.15), rgba(14, 165, 233, 0.18), rgba(93, 213, 255, 0.18));
+  background: conic-gradient(
+    from 120deg,
+    rgba(93, 213, 255, 0.18),
+    rgba(244, 114, 182, 0.15),
+    rgba(14, 165, 233, 0.18),
+    rgba(93, 213, 255, 0.18)
+  );
   filter: blur(120px);
   opacity: 0.8;
   animation: aurora 22s ease-in-out infinite;
@@ -245,7 +257,10 @@ body {
   color: var(--text);
   padding: 12px 14px;
   font-size: 15px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .field-input:focus {
@@ -307,7 +322,10 @@ body {
   cursor: pointer;
   font-weight: 700;
   color: #061426;
-  transition: transform 0.12s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
   text-decoration: none;
 }
 
@@ -364,7 +382,9 @@ body {
 }
 
 .status-dot.pulse {
-  animation: pulse 1.8s ease-in-out infinite, blink 1.8s ease-in-out infinite;
+  animation:
+    pulse 1.8s ease-in-out infinite,
+    blink 1.8s ease-in-out infinite;
 }
 
 @keyframes pulse {

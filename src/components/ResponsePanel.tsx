@@ -10,7 +10,14 @@ type ResponsePanelProps = {
   onRetry: () => void
 }
 
-const ResponsePanel = ({ response, loading, error, status, onCopy, onRetry }: ResponsePanelProps) => {
+const ResponsePanel = ({
+  response,
+  loading,
+  error,
+  status,
+  onCopy,
+  onRetry
+}: ResponsePanelProps) => {
   const formattedJson = useMemo(() => {
     if (!response) return ''
     try {
@@ -109,15 +116,15 @@ const ResponsePanel = ({ response, loading, error, status, onCopy, onRetry }: Re
         <div className="preview-block">
           <div className="block-header">
             <h3>Template Output</h3>
-          <button
-            className="btn ghost"
-            onClick={() => {
-              void onCopy(templateContent, 'text')
-            }}
-            disabled={loading}
-          >
-            Copy template
-          </button>
+            <button
+              className="btn ghost"
+              onClick={() => {
+                void onCopy(templateContent, 'text')
+              }}
+              disabled={loading}
+            >
+              Copy template
+            </button>
           </div>
           <pre className="code-block code-block-scroll">{templateContent}</pre>
         </div>

@@ -131,8 +131,8 @@ const App = () => {
           <div className="badge">AI-generated templates</div>
           <h1>Template Generator Frontend</h1>
           <p className="lede">
-            Send your prompt, template, and optional identifiers to the backend, preview the
-            JSON response, and copy the generated content.
+            Send your prompt, template, and optional identifiers to the backend, preview the JSON
+            response, and copy the generated content.
           </p>
         </header>
 

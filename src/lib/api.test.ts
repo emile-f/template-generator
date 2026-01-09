@@ -42,27 +42,29 @@ describe('generateTemplate', () => {
   })
 
   it('throws ApiError when the server responds with an error', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      text: vi.fn().mockResolvedValue(JSON.stringify({ message: 'boom' }))
-    }))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: vi.fn().mockResolvedValue(JSON.stringify({ message: 'boom' }))
+      })
+    )
 
     await expect(generateTemplate(basePayload)).rejects.toBeInstanceOf(ApiError)
   })
 
   it('aborts and reports a timeout when the request takes too long', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockImplementation((_url, options: RequestInit = {}) => {
-      const signal = options.signal as AbortSignal | undefined
-      return new Promise((_resolve, reject) => {
-        signal?.addEventListener('abort', () =>
-          reject(new DOMException('Aborted', 'AbortError'))
-        )
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((_url, options: RequestInit = {}) => {
+        const signal = options.signal as AbortSignal | undefined
+        return new Promise((_resolve, reject) => {
+          signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')))
+        })
       })
-    }))
-
-    await expect(generateTemplate(basePayload, { timeoutMs: 5 })).rejects.toThrow(
-      /timed out/i
     )
+
+    await expect(generateTemplate(basePayload, { timeoutMs: 5 })).rejects.toThrow(/timed out/i)
   })
 })
