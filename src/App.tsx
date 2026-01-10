@@ -193,8 +193,8 @@ const App = () => {
                 label="Template"
                 value={formState.template}
                 onChange={(value) => updateField('template', value)}
-                placeholder="Use {{placeholders}} to map your variables."
-                helpText="Required. Include placeholders like {{user_name}} or {{cta_link}} that the backend will fill."
+                placeholder="<div>My template </div>"
+                helpText="Required."
                 required
                 type="textarea"
                 rows={8}
